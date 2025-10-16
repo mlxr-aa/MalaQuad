@@ -73,11 +73,27 @@ const checkStandaloneMode = () => {
   )
 }
 
+// 验证PWA是否真正安装
+const verifyPWAInstallation = () => {
+  // 检查是否在独立模式下运行
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true
+
+  // 如果不在独立模式，清除安装记录
+  if (!isStandalone) {
+    localStorage.removeItem('pwa-installed')
+    console.log('PWA未真正安装，清除安装记录')
+  }
+
+  return isStandalone
+}
+
 // 检测是否已安装过
 const isAlreadyInstalled = computed(() => {
-  return (
-    isInStandaloneMode.value || localStorage.getItem('pwa-installed') === 'true'
-  )
+  // 首先验证PWA是否真正安装
+  const isReallyInstalled = verifyPWAInstallation()
+  return isReallyInstalled
 })
 
 // 检查是否应该显示安装提示
@@ -101,6 +117,9 @@ onMounted(() => {
   // 检测设备类型
   isIOS.value = checkIOS()
   isInStandaloneMode.value = checkStandaloneMode()
+
+  // 验证PWA安装状态
+  verifyPWAInstallation()
 
   // 监听 beforeinstallprompt 事件（主要针对Android Chrome）
   window.addEventListener('beforeinstallprompt', (e) => {
